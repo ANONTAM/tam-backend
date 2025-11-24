@@ -2,24 +2,26 @@ import { supabase } from "../lib/supabase.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.statusCode = 405;
-    res.json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
+  // Aceptar tanto objeto como string
   let payload;
   try {
-    payload = JSON.parse(req.body || "{}");
+    if (typeof req.body === "string") {
+      payload = JSON.parse(req.body || "{}");
+    } else {
+      payload = req.body || {};
+    }
   } catch (e) {
-    res.statusCode = 400;
-    res.json({ error: "Invalid JSON body" });
+    res.status(400).json({ error: "Invalid JSON body" });
     return;
   }
 
   const { id } = payload;
   if (!id) {
-    res.statusCode = 400;
-    res.json({ error: "Missing id in payload" });
+    res.status(400).json({ error: "Missing id in payload" });
     return;
   }
 
@@ -31,13 +33,11 @@ export default async function handler(req, res) {
 
   if (updateStartError) {
     console.error("Supabase error (mark generating):", updateStartError);
-    res.statusCode = 500;
-    res.json({ error: updateStartError.message });
+    res.status(500).json({ error: updateStartError.message });
     return;
   }
 
-  // 2) AQUÍ IRÁ LA LLAMADA REAL A LA IA (OpenAI/Midjourney/SDXL)
-  // Por ahora lo dejamos como stub y ponemos una URL falsa de imagen.
+  // 2) Stub de imagen (luego sustituiremos por llamada real a la IA)
   const fakeImageUrl = "https://placehold.co/1024x1024?text=TAM+PENDING";
 
   // 3) Marcamos como "generated"
@@ -52,11 +52,9 @@ export default async function handler(req, res) {
 
   if (updateEndError) {
     console.error("Supabase error (mark generated):", updateEndError);
-    res.statusCode = 500;
-    res.json({ error: updateEndError.message });
+    res.status(500).json({ error: updateEndError.message });
     return;
   }
 
-  res.statusCode = 200;
-  res.json({ ok: true, image_url: fakeImageUrl });
+  res.status(200).json({ ok: true, image_url: fakeImageUrl });
 }
